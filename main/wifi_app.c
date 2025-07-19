@@ -18,6 +18,8 @@
 #include "rgb_led.h"
 #include "tasks_common.h"
 #include "wifi_app.h"
+#include "http_server.h"
+
 
 static const char TAG [] = "wifi_app";
 
@@ -158,7 +160,7 @@ static void wifi_app_task(void *pvParameters)
 				case WIFI_APP_MSG_START_HTTP_SERVER:
 					ESP_LOGI(TAG, "WIFI_APP_MSG_START_HTTP_SERVER");
 
-//					http_server_start();
+					http_server_start();
 					rgb_led_http_server_started();
 
 					break;
