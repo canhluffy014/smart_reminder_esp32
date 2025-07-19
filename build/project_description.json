@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "app-template",
-    "project_version":    "1",
+    "project_version":    "81fdae4-dirty",
     "project_path":       "E:/esp_idf/workspace/test_wifi",
     "idf_path":           "E:/esp_idf/frameworks/esp-idf-v5.3.1",
     "build_dir":          "E:/esp_idf/workspace/test_wifi/build",
@@ -1180,7 +1180,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "E:/esp_idf/workspace/test_wifi/build/esp-idf/main/libmain.a",
-            "sources": [ "E:/esp_idf/workspace/test_wifi/main/main.c", "E:/esp_idf/workspace/test_wifi/main/rgb_led.c", "E:/esp_idf/workspace/test_wifi/main/wifi_app.c", "E:/esp_idf/workspace/test_wifi/main/http_server.c", "E:/esp_idf/workspace/test_wifi/build/app.css.S", "E:/esp_idf/workspace/test_wifi/build/app.js.S", "E:/esp_idf/workspace/test_wifi/build/favicon.ico.S", "E:/esp_idf/workspace/test_wifi/build/index.html.S", "E:/esp_idf/workspace/test_wifi/build/jquery-3.3.1.min.js.S" ],
+            "sources": [ "E:/esp_idf/workspace/test_wifi/main/main.c", "E:/esp_idf/workspace/test_wifi/main/rgb_led.c", "E:/esp_idf/workspace/test_wifi/main/wifi_app.c", "E:/esp_idf/workspace/test_wifi/main/http_server.c", "E:/esp_idf/workspace/test_wifi/main/ldr_gl5537.c", "E:/esp_idf/workspace/test_wifi/build/app.css.S", "E:/esp_idf/workspace/test_wifi/build/app.js.S", "E:/esp_idf/workspace/test_wifi/build/favicon.ico.S", "E:/esp_idf/workspace/test_wifi/build/index.html.S", "E:/esp_idf/workspace/test_wifi/build/jquery-3.3.1.min.js.S" ],
             "include_dirs": [ "." ]
         },
         "mbedtls": {
