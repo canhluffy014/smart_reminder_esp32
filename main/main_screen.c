@@ -87,17 +87,6 @@ void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
     send_data(data, 2);
 }
 
-void draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg) {
-    while (*str) {
-        draw_char(x, y, *str++, color, bg);
-        x += FONT_WIDTH + FONT_SPACING;
-        if (x > TFT_WIDTH - FONT_WIDTH) {
-            x = 0;
-            y += FONT_HEIGHT;
-        }
-    }
-}
-
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg) {
     if (c < 32 || c >= 32 + FONT_NUM_CHARS) return;
     const uint8_t *chr = font_table[c - 32];
@@ -110,6 +99,17 @@ void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg) {
                 draw_pixel(x+i, y+j, bg);
             }
             line >>= 1;
+        }
+    }
+}
+
+void draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg) {
+    while (*str) {
+        draw_char(x, y, *str++, color, bg);
+        x += FONT_WIDTH + FONT_SPACING;
+        if (x > TFT_WIDTH - FONT_WIDTH) {
+            x = 0;
+            y += FONT_HEIGHT;
         }
     }
 }
