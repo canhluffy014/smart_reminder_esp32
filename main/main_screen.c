@@ -4,6 +4,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "string.h"
+#include "time.h"
+#include "esp_sntp.h"
 
 /* Pin Definitions */
 #define PIN_NUM_MISO   -1
@@ -24,18 +26,16 @@
 #define COLOR_RED    0xF800
 #define COLOR_GREEN  0x07E0
 #define COLOR_BLUE   0x001F
+#define COLOR_YELLOW 0xFFE0
 
 /* Font Definitions */
 #define FONT_WIDTH   5
 #define FONT_HEIGHT  8
 #define FONT_SPACING 1
-#define FONT_NUM_CHARS 95 // from ASCII 32 to 126
+#define FONT_NUM_CHARS 95
 
 static spi_device_handle_t spi;
-
-/* Font array omitted for brevity; same as before */
-extern const uint8_t font[]; // Declare if in separate file
-
+extern const uint8_t font[];
 static const uint8_t* font_table[FONT_NUM_CHARS];
 
 static void init_font_table() {
@@ -159,16 +159,32 @@ void init_display() {
     vTaskDelay(100 / portTICK_PERIOD_MS);
 }
 
+void initialize_sntp() {
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+}
+
 void app_main() {
-    init_font_table(); // NEW
+    init_font_table();
     init_display();
+    initialize_sntp();
 
     fill_screen(COLOR_BLACK);
-    draw_string(10, 10, "Hello ESP32!", COLOR_GREEN, COLOR_BLACK);
-    draw_string(10, 30, "ST7735 Display", COLOR_RED, COLOR_BLACK);
-    draw_string(10, 50, "Text Example", COLOR_BLUE, COLOR_BLACK);
+    draw_string(0, 0, "Lich nhac!", COLOR_YELLOW, COLOR_BLACK);
+    draw_string(0, 12, "Uong thuoc luc: ", COLOR_WHITE, COLOR_BLACK);
 
-    while(1) {
+    while (1) {
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+
+        char time_str[16];
+        snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
+        draw_string(0, 30, time_str, COLOR_GREEN, COLOR_BLACK);
+
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
