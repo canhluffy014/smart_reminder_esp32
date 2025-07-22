@@ -6,6 +6,8 @@
 #include "string.h"
 #include "time.h"
 #include "esp_sntp.h"
+#include "esp_err.h"
+#include "stdint.h"
 
 /* Pin Definitions */
 #define PIN_NUM_MISO   -1
@@ -36,7 +38,7 @@
 
 static spi_device_handle_t spi;
 extern const uint8_t font[];
-static const uint8_t* const font_table[FONT_NUM_CHARS];
+static const uint8_t* font_table[FONT_NUM_CHARS];
 
 static void init_font_table() {
     for (int i = 0; i < FONT_NUM_CHARS; i++) {
