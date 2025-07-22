@@ -43,6 +43,7 @@
 #define ST7735_DISPON  0x29
 #define ST7735_COLMOD  0x3A
 #define ST7735_MADCTL  0x36
+#define TAG "TFT"
 
 static spi_device_handle_t spi;
 const uint8_t font[] = {
@@ -182,6 +183,37 @@ void set_addr_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     send_data(data, 4);
 
     send_cmd(0x2C);
+}
+
+void test_gpio() {
+    ESP_LOGI("TEST", "GPIO DC=%d, RST=%d, BL=%d", PIN_NUM_DC, PIN_NUM_RST, PIN_NUM_BL);
+}
+
+void lcd_spi_pre_transfer_callback(spi_transaction_t *t) {
+    int dc = (int)t->user;
+    gpio_set_level(PIN_NUM_DC, dc);
+}
+
+void init_spi() {
+    spi_bus_config_t buscfg = {
+        .miso_io_num = PIN_NUM_MISO,
+        .mosi_io_num = PIN_NUM_MOSI,
+        .sclk_io_num = PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 4096,
+    };
+
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = 20 * 1000 * 1000,
+        .mode = 0,
+        .spics_io_num = PIN_NUM_CS,
+        .queue_size = 7,
+        .pre_cb = lcd_spi_pre_transfer_callback,  // required for DC pin!
+    };
+
+    ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
+    ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &devcfg, &spi));
 }
 
 void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
