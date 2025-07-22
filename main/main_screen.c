@@ -9,6 +9,10 @@
 #include "esp_sntp.h"
 #include "esp_err.h"
 #include "stdint.h"
+#include "nvs_flash.h"
+#include "esp_netif.h"
+#include "driver/ledc.h"
+#include "driver/adc.h"
 
 /* Pin Definitions */
 #define PIN_NUM_MISO   -1
