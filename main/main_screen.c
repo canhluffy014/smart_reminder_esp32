@@ -36,28 +36,11 @@
 
 static spi_device_handle_t spi;
 extern const uint8_t font[];
-// Make font_table const since it won't change
 static const uint8_t* const font_table[FONT_NUM_CHARS];
 
 static void init_font_table() {
     for (int i = 0; i < FONT_NUM_CHARS; i++) {
         font_table[i] = &font[i * FONT_WIDTH];
-    }
-}
-
-void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg) {
-    if (c < 32 || c >= 32 + FONT_NUM_CHARS) return;
-    const uint8_t *chr = font_table[c - 32];
-    for (uint8_t i = 0; i < FONT_WIDTH; i++) {
-        uint8_t line = chr[i];
-        for (uint8_t j = 0; j < FONT_HEIGHT; j++) {
-            if (line & 0x1) {
-                draw_pixel(x+i, y+j, color);
-            } else if (bg != color) {
-                draw_pixel(x+i, y+j, bg);
-            }
-            line >>= 1;
-        }
     }
 }
 
@@ -108,6 +91,22 @@ void draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16
         if (x > TFT_WIDTH - FONT_WIDTH) {
             x = 0;
             y += FONT_HEIGHT;
+        }
+    }
+}
+
+void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg) {
+    if (c < 32 || c >= 32 + FONT_NUM_CHARS) return;
+    const uint8_t *chr = font_table[c - 32];
+    for (uint8_t i = 0; i < FONT_WIDTH; i++) {
+        uint8_t line = chr[i];
+        for (uint8_t j = 0; j < FONT_HEIGHT; j++) {
+            if (line & 0x1) {
+                draw_pixel(x+i, y+j, color);
+            } else if (bg != color) {
+                draw_pixel(x+i, y+j, bg);
+            }
+            line >>= 1;
         }
     }
 }
