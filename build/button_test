@@ -1,4 +1,4 @@
-const int buttonPin = 2; // Chân GPIO 2
+const int buttonPin = 0; // Chân GPIO 0
 int buttonState = 0;
 
 void setup() {
