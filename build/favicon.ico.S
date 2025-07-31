@@ -1,4 +1,4 @@
-/* * Data converted from E:/esp_idf/workspace/test_wifi/main/Webpage/favicon.ico
+/* * Data converted from E:/esp_idf/workspace/test_wifi/main/webpage/favicon.ico
  */
 .data
 #if !defined (__APPLE__) && !defined (__linux__)

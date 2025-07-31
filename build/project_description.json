@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "app-template",
-    "project_version":    "81fdae4-dirty",
+    "project_version":    "bb1a9ad-dirty",
     "project_path":       "E:/esp_idf/workspace/test_wifi",
     "idf_path":           "E:/esp_idf/frameworks/esp-idf-v5.3.1",
     "build_dir":          "E:/esp_idf/workspace/test_wifi/build",

@@ -1,0 +1,7 @@
+-- Building ESP-IDF components for target esp32s3
+-- Project sdkconfig file E:/esp_idf/workspace/test_wifi/sdkconfig
+-- Configuring incomplete, errors occurred!
+See also "E:/esp_idf/workspace/test_wifi/build/CMakeFiles/CMakeOutput.log".
+[0/1] Re-running CMake...
+FAILED: build.ninja 
+E:\esp_idf\tools\cmake\3.24.0\bin\cmake.exe --regenerate-during-build -SE:\esp_idf\workspace\test_wifi -BE:\esp_idf\workspace\test_wifi\build

@@ -1,205 +1,133 @@
-/*
- * wifi_app.c
- *
- *  Created on: 18 thg 7, 2025
- *      Author: Lenovo
- */
-
-
+#include <string.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
 #include "freertos/task.h"
-
-#include "esp_err.h"
-#include "esp_log.h"
+#include "freertos/event_groups.h"
 #include "esp_wifi.h"
-#include "lwip/netdb.h"
-
-#include "rgb_led.h"
-#include "tasks_common.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_netif.h"
+#include "nvs_flash.h"
 #include "wifi_app.h"
-#include "http_server.h"
 
 
-static const char TAG [] = "wifi_app";
+static const char *TAG_STA = "WiFi Sta";
 
-static QueueHandle_t wifi_app_queue_handle;
+static int s_retry_num = 0;
 
-esp_netif_t* esp_netif_sta = NULL;
-esp_netif_t* esp_netif_ap  = NULL;
+/* FreeRTOS event group to signal when we are connected/disconnected */
+static EventGroupHandle_t s_wifi_event_group;
 
-static void wifi_app_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
 {
-	if (event_base == WIFI_EVENT)
-	{
-		switch (event_id)
-		{
-			case WIFI_EVENT_AP_START:
-				ESP_LOGI(TAG, "WIFI_EVENT_AP_START");
-				break;
-
-			case WIFI_EVENT_AP_STOP:
-				ESP_LOGI(TAG, "WIFI_EVENT_AP_STOP");
-				break;
-
-			case WIFI_EVENT_AP_STACONNECTED:
-				ESP_LOGI(TAG, "WIFI_EVENT_AP_STACONNECTED");
-				break;
-
-			case WIFI_EVENT_AP_STADISCONNECTED:
-				ESP_LOGI(TAG, "WIFI_EVENT_AP_STADISCONNECTED");
-				break;
-
-			case WIFI_EVENT_STA_START:
-				ESP_LOGI(TAG, "WIFI_EVENT_STA_START");
-				break;
-
-			case WIFI_EVENT_STA_CONNECTED:
-				ESP_LOGI(TAG, "WIFI_EVENT_STA_CONNECTED");
-				break;
-
-			case WIFI_EVENT_STA_DISCONNECTED:
-				ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
-				break;
-		}
-	}
-	else if (event_base == IP_EVENT)
-	{
-		switch (event_id)
-		{
-			case IP_EVENT_STA_GOT_IP:
-				ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
-				break;
-		}
-	}
+   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+        ESP_LOGI(TAG_STA, "Station started");
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *) event_data;
+        ESP_LOGI(TAG_STA, "Got IP:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    }
 }
 
-static void wifi_app_event_handler_init(void)
+/* Initialize wifi station */
+esp_netif_t *wifi_init_sta(void)
 {
-		ESP_ERROR_CHECK(esp_event_loop_create_default());
-	
-	esp_event_handler_instance_t instance_wifi_event;
-	esp_event_handler_instance_t instance_ip_event;
-	ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_app_event_handler, NULL, &instance_wifi_event));
-	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &wifi_app_event_handler, NULL, &instance_ip_event));
+    esp_netif_t *esp_netif_sta = esp_netif_create_default_wifi_sta();
+
+    wifi_config_t wifi_sta_config = {
+        .sta = {
+            .ssid = EXAMPLE_ESP_WIFI_STA_SSID,
+            .password = EXAMPLE_ESP_WIFI_STA_PASSWD,
+            .scan_method = WIFI_ALL_CHANNEL_SCAN,
+            .failure_retry_cnt = EXAMPLE_ESP_MAXIMUM_RETRY,
+            /* Authmode threshold resets to WPA2 as default if password matches WPA2 standards (password len => 8).
+             * If you want to connect the device to deprecated WEP/WPA networks, Please set the threshold value
+             * to WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK and set the password with length and format matching to
+            * WIFI_AUTH_WEP/WIFI_AUTH_WPA_PSK standards.
+             */
+            .threshold.authmode = ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD,
+            .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+        },
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_sta_config) );
+
+    ESP_LOGI(TAG_STA, "wifi_init_sta finished.");
+
+    return esp_netif_sta;
 }
 
-static void wifi_app_default_wifi_init(void)
+void wifi_connect()
 {
-	
-	ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-	
-	wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
-	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-	esp_netif_sta = esp_netif_create_default_wifi_sta();
-	esp_netif_ap = esp_netif_create_default_wifi_ap();
-}
+    //Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
 
-static void wifi_app_soft_ap_config(void)
-{
-	// SoftAP - WiFi access point configuration
-	wifi_config_t ap_config =
-	{
-		.ap = {
-				.ssid = WIFI_AP_SSID,
-				.ssid_len = strlen(WIFI_AP_SSID),
-				.password = WIFI_AP_PASSWORD,
-				.channel = WIFI_AP_CHANNEL,
-				.ssid_hidden = WIFI_AP_SSID_HIDDEN,
-				.authmode = WIFI_AUTH_WPA2_PSK,
-				.max_connection = WIFI_AP_MAX_CONNECTIONS,
-				.beacon_interval = WIFI_AP_BEACON_INTERVAL,
-		},
-	};
+    /* Initialize event group */
+    s_wifi_event_group = xEventGroupCreate();
 
-	// Configure DHCP for the AP
-	esp_netif_ip_info_t ap_ip_info;
-	memset(&ap_ip_info, 0x00, sizeof(ap_ip_info));
+    /* Register Event handler */
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+                    ESP_EVENT_ANY_ID,
+                    &wifi_event_handler,
+                    NULL,
+                    NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
+                    IP_EVENT_STA_GOT_IP,
+                    &wifi_event_handler,
+                    NULL,
+                    NULL));
 
-	esp_netif_dhcps_stop(esp_netif_ap);					///> must call this first
-	inet_pton(AF_INET, WIFI_AP_IP, &ap_ip_info.ip);		///> Assign access point's static IP, GW, and netmask
-	inet_pton(AF_INET, WIFI_AP_GATEWAY, &ap_ip_info.gw);
-	inet_pton(AF_INET, WIFI_AP_NETMASK, &ap_ip_info.netmask);
-	ESP_ERROR_CHECK(esp_netif_set_ip_info(esp_netif_ap, &ap_ip_info));			///> Statically configure the network interface
-	ESP_ERROR_CHECK(esp_netif_dhcps_start(esp_netif_ap));						///> Start the AP DHCP server (for connecting stations e.g. your mobile device)
+    /*Initialize WiFi */
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));						///> Setting the mode as Access Point / Station Mode
-	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config));			///> Set our configuration
-	ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_AP_BANDWIDTH));		///> Our default bandwidth 20 MHz
-	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_STA_POWER_SAVE));						///> Power save set to "NONE"
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
 
-}
+  
+    /* Initialize STA */
+    ESP_LOGI(TAG_STA, "ESP_WIFI_MODE_STA");
+    esp_netif_t *esp_netif_sta = wifi_init_sta();
 
-static void wifi_app_task(void *pvParameters)
-{
-	wifi_app_queue_message_t msg;
+    /* Start WiFi */
+    ESP_ERROR_CHECK(esp_wifi_start() );
 
-	
-	wifi_app_event_handler_init();
+    /*
+     * Wait until either the connection is established (WIFI_CONNECTED_BIT) or
+     * connection failed for the maximum number of re-tries (WIFI_FAIL_BIT).
+     * The bits are set by event_handler() (see above)
+     */
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           portMAX_DELAY);
 
-	
-	wifi_app_default_wifi_init();
+    /* xEventGroupWaitBits() returns the bits before the call returned,
+     * hence we can test which event actually happened. */
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG_STA, "connected to ap SSID:%s password:%s",
+                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+    } else if (bits & WIFI_FAIL_BIT) {
+        ESP_LOGI(TAG_STA, "Failed to connect to SSID:%s, password:%s",
+                 EXAMPLE_ESP_WIFI_STA_SSID, EXAMPLE_ESP_WIFI_STA_PASSWD);
+    } else {
+        ESP_LOGE(TAG_STA, "UNEXPECTED EVENT");
+        return;
+    }
 
-	
-	wifi_app_soft_ap_config();
+    /* Set sta as the default interface */
+    esp_netif_set_default_netif(esp_netif_sta);
 
-	
-	ESP_ERROR_CHECK(esp_wifi_start());
-
-	
-	wifi_app_send_message(WIFI_APP_MSG_START_HTTP_SERVER);
-
-	for (;;)
-	{
-		if (xQueueReceive(wifi_app_queue_handle, &msg, portMAX_DELAY))
-		{
-			switch (msg.msgID)
-			{
-				case WIFI_APP_MSG_START_HTTP_SERVER:
-					ESP_LOGI(TAG, "WIFI_APP_MSG_START_HTTP_SERVER");
-
-					http_server_start();
-					rgb_led_http_server_started();
-
-					break;
-
-				case WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER:
-					ESP_LOGI(TAG, "WIFI_APP_MSG_CONNECTING_FROM_HTTP_SERVER");
-
-					break;
-
-				case WIFI_APP_MSG_STA_CONNECTED_GOT_IP:
-					ESP_LOGI(TAG, "WIFI_APP_MSG_STA_CONNECTED_GOT_IP");
-					rgb_led_wifi_connected();
-
-					break;
-
-				default:
-					break;
-
-			}
-		}
-	}
-}
-
-BaseType_t wifi_app_send_message(wifi_app_message_e msgID)
-{
-	wifi_app_queue_message_t msg;
-	msg.msgID = msgID;
-	return xQueueSend(wifi_app_queue_handle, &msg, portMAX_DELAY);
-}
-
-void wifi_app_start(){
-	ESP_LOGI(TAG, "STARTING WIFI APPLICATION");
-	
-	rgb_led_wifi_app_started();
-	
-	esp_log_level_set("wifi", ESP_LOG_NONE);
-	
-	wifi_app_queue_handle = xQueueCreate(3, sizeof(wifi_app_queue_message_t));
-	
-	xTaskCreatePinnedToCore(&wifi_app_task, "wifi_app_task", WIFI_APP_TASK_STACK_SIZE, NULL, WIFI_APP_TASK_PRIORITY, NULL, WIFI_APP_TASK_CORE_ID);
-	
+    
+    
 }

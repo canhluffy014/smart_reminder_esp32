@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfgen\__main__.py", line 18, in <module>
+    main()
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfgen\core.py", line 776, in main
+    config = kconfiglib.Kconfig(args.kconfig)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 819, in __init__
+    self._init(filename, warn, warn_to_stderr, encoding)
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 957, in _init
+    self._parse_block(None, self.top_node, self.top_node).next = None
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2607, in _parse_block
+    prev = self._parse_block(None, parent, prev)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2607, in _parse_block
+    prev = self._parse_block(None, parent, prev)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 2709, in _parse_block
+    self._parse_error(
+  File "E:\esp_idf\python_env\idf5.3_py3.11_env\Lib\site-packages\kconfiglib\core.py", line 3523, in _parse_error
+    raise KconfigError(
+kconfiglib.core.KconfigError: E:/esp_idf/workspace/test_wifi/main/Kconfig.projbuild:94: error: couldn't parse 'endmenu': no corresponding 'menu'
+CMake Error at E:/esp_idf/frameworks/esp-idf-v5.3.1/tools/cmake/kconfig.cmake:209 (message):
+  Failed to run kconfgen
+  (E:/esp_idf/python_env/idf5.3_py3.11_env/Scripts/python.exe;-m;kconfgen;--list-separator=semicolon;--kconfig;E:/esp_idf/frameworks/esp-idf-v5.3.1/Kconfig;--sdkconfig-rename;E:/esp_idf/frameworks/esp-idf-v5.3.1/sdkconfig.rename;--config;E:/esp_idf/workspace/test_wifi/sdkconfig;--env-file;E:/esp_idf/workspace/test_wifi/build/config.env).
+  Error 1
+Call Stack (most recent call first):
+  E:/esp_idf/frameworks/esp-idf-v5.3.1/tools/cmake/build.cmake:623 (__kconfig_generate_config)
+  E:/esp_idf/frameworks/esp-idf-v5.3.1/tools/cmake/project.cmake:710 (idf_build_process)
+  CMakeLists.txt:6 (project)
+
+
+ninja: error: rebuilding 'build.ninja': subcommand failed

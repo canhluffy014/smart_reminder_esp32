@@ -1,4 +1,4 @@
-/* * Data converted from E:/esp_idf/workspace/test_wifi/main/Webpage/app.js
+/* * Data converted from E:/esp_idf/workspace/test_wifi/main/webpage/app.js
  */
 .data
 #if !defined (__APPLE__) && !defined (__linux__)

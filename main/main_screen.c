@@ -1,4 +1,5 @@
 #include "driver/spi_master.h"
+#include "driver/spi_common.h"
 #include "driver/gpio.h"
 #include "driver/spi_common.h"
 #include "esp_log.h"
@@ -7,8 +8,11 @@
 #include "string.h"
 #include "time.h"
 #include "esp_sntp.h"
+<<<<<<< HEAD
 #include "esp_err.h"
 #include "stdint.h"
+=======
+>>>>>>> e452b66 (Sửa các file WiFi)
 
 /* Pin Definitions */
 #define PIN_NUM_MISO   -1
@@ -36,6 +40,7 @@
 #define FONT_HEIGHT  8
 #define FONT_SPACING 1
 #define FONT_NUM_CHARS 95
+<<<<<<< HEAD
 
 #define ST7735_NOP     0x00
 #define ST7735_SWRESET 0x01
@@ -143,6 +148,18 @@ const uint8_t font[] = {
     0x00,0x41,0x36,0x08,0x00, // '}'
     0x08,0x08,0x2A,0x1C,0x08, // '~'
 };
+=======
+
+static spi_device_handle_t spi;
+extern const uint8_t font[];
+static const uint8_t* font_table[FONT_NUM_CHARS];
+
+static void init_font_table() {
+    for (int i = 0; i < FONT_NUM_CHARS; i++) {
+        font_table[i] = &font[i * FONT_WIDTH];
+    }
+}
+>>>>>>> e452b66 (Sửa các file WiFi)
 
 static const uint8_t* font_table[FONT_NUM_CHARS];
 
@@ -183,6 +200,7 @@ void set_addr_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     send_data(data, 4);
 
     send_cmd(0x2C);
+<<<<<<< HEAD
 }
 
 void test_gpio() {
@@ -214,6 +232,8 @@ void init_spi() {
 
     ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
     ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &devcfg, &spi));
+=======
+>>>>>>> e452b66 (Sửa các file WiFi)
 }
 
 void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
@@ -224,16 +244,17 @@ void draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
 }
 
 void draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg) {
+<<<<<<< HEAD
     if (c < 32 || c >= 32 + FONT_NUM_CHARS) return;
+=======
+    if (c < 32 || c > 126) return;
+>>>>>>> e452b66 (Sửa các file WiFi)
     const uint8_t *chr = font_table[c - 32];
     for (uint8_t i = 0; i < FONT_WIDTH; i++) {
         uint8_t line = chr[i];
         for (uint8_t j = 0; j < FONT_HEIGHT; j++) {
-            if (line & 0x1) {
-                draw_pixel(x+i, y+j, color);
-            } else if (bg != color) {
-                draw_pixel(x+i, y+j, bg);
-            }
+            if (line & 0x1) draw_pixel(x+i, y+j, color);
+            else if (bg != color) draw_pixel(x+i, y+j, bg);
             line >>= 1;
         }
     }
@@ -267,6 +288,7 @@ void init_display() {
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE
     };
+<<<<<<< HEAD
     esp_err_t ret = gpio_config(&io_conf);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "GPIO config failed: %s", esp_err_to_name(ret));
@@ -329,6 +351,51 @@ void init_display() {
     send_cmd(ST7735_DISPON);
     vTaskDelay(10 / portTICK_PERIOD_MS);
     ESP_LOGI(TAG, "Display initialized successfully");
+}
+
+void initialize_sntp() {
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+=======
+    gpio_config(&io_conf);
+
+    gpio_set_level(PIN_NUM_RST, 0);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    gpio_set_level(PIN_NUM_RST, 1);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+    gpio_set_level(PIN_NUM_BL, 1);
+
+    spi_bus_config_t buscfg = {
+        .miso_io_num = PIN_NUM_MISO,
+        .mosi_io_num = PIN_NUM_MOSI,
+        .sclk_io_num = PIN_NUM_CLK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 4096,
+    };
+
+    spi_device_interface_config_t devcfg = {
+        .clock_speed_hz = 20 * 1000 * 1000,
+        .mode = 0,
+        .spics_io_num = PIN_NUM_CS,
+        .queue_size = 7,
+    };
+
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO));
+
+    ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &devcfg, &spi));
+
+
+    send_cmd(0x01);
+    vTaskDelay(150 / portTICK_PERIOD_MS);
+    send_cmd(0x11);
+    vTaskDelay(255 / portTICK_PERIOD_MS);
+    send_cmd(0x3A);
+    send_data((uint8_t[]){0x05}, 1);
+    send_cmd(0x29);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+>>>>>>> e452b66 (Sửa các file WiFi)
 }
 
 void initialize_sntp() {
