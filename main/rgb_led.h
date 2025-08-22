@@ -1,10 +1,3 @@
-/*
- * rgb_led.h
- *
- *  Created on: 16 thg 7, 2025
- *      Author: Lenovo
- */
-
 #ifndef MAIN_RGB_LED_H_
 #define MAIN_RGB_LED_H_
 
@@ -13,20 +6,14 @@
 
 #define RGB_LED_CHANNEL_NUM			2 
 
-typedef struct{						// Khai bao kieu du li
-	int channel;					// kenh LEDC
+typedef struct{						
+	int channel;					
 	int gpio;						
 	int mode;						
-	int timer_index;				//kênh timer
-} ledc_info_t;						// Cau hinh PWM cho led
+	int timer_index;				
+} ledc_info_t;						
 
+void rgb_led_wifi_app_started(void);	
+void rgb_led_wifi_connected(void);		
 
-
-void rgb_led_wifi_app_started(void);	//Bat LED trang thai khi wifi bat dau chay
-
-void rgb_led_http_server_started(void);	//Bat LED trang thai khi http server chay
-
-void rgb_led_wifi_connected(void);		//Bat LED trang thai khi wifi ket noi
-
-
-#endif /* MAIN_RGB_LED_H_ */
+#endif 

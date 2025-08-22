@@ -6,10 +6,11 @@
 #include "esp_wifi.h"
 #include "esp_netif.h"
 
-// STA Configuration
-#define EXAMPLE_ESP_WIFI_STA_SSID           "dlacm"
-#define EXAMPLE_ESP_WIFI_STA_PASSWD         "xiaomi111"
+#define EXAMPLE_ESP_WIFI_STA_SSID           "MaiDung"
+#define EXAMPLE_ESP_WIFI_STA_PASSWD         "88888888"
 #define EXAMPLE_ESP_MAXIMUM_RETRY           10
+
+extern EventGroupHandle_t s_wifi_event_group;
 
 #if CONFIG_ESP_WIFI_AUTH_OPEN
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD   WIFI_AUTH_OPEN
@@ -29,15 +30,12 @@
 #define ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD   WIFI_AUTH_WAPI_PSK
 #endif
 
-// Event group bits for WiFi status
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-/* Initialize wifi station */
 esp_netif_t *wifi_init_sta(void);
 
-// Function to initialize WiFi in Station mode
 void wifi_connect();
 
-#endif /* MAIN_WIFI_APP_H_ */
+#endif 
 
